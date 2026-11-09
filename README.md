@@ -131,7 +131,7 @@ advrobust-studio/
 │   └── run_benchmark.py     # make bench
 ├── config/default.yaml
 ├── checkpoints/             # small trained CIFAR-10 models (committed)
-├── assets/imagenet_demo/    # 5 photos for the ImageNet transfer demo
+├── assets/imagenet_demo/    # 5 photos for the ImageNet transfer demo (see ASSETS.md)
 ├── results/sample/          # committed sample report + figures
 └── tests/                   # pytest suite
 ```
@@ -169,6 +169,18 @@ This is an educational and defensive research tool. Only attack **models you own
 - Xu, Evans, Qi. *Feature Squeezing.* NDSS 2018.
 - Cohen, Rosenfeld, Kolter. *Certified Adversarial Robustness via Randomized Smoothing.* ICML 2019.
 
+## Demo image attribution (`assets/imagenet_demo/`)
+
+All five demo photos are kept in the tree for the ImageNet transfer demo:
+
+| File | Attribution |
+|---|---|
+| `astronaut.jpg` | NASA portrait of Eileen Collins (same image shipped by [scikit-image](https://scikit-image.org/)); no known copyright restrictions. |
+| `grace_hopper.jpg` | U.S. Navy 1984 official portrait of Grace Hopper by James S. Davis; public domain. |
+| `dog.jpg` | [American Eskimo Dog](https://commons.wikimedia.org/wiki/File:American_Eskimo_Dog.jpg) photo by Robert Southworth (2004), flipped 2009 by Craig Pemberton; also used by PyTorch Hub. Licensed [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) (also GFDL 1.2+). Resized in this repository. |
+| `dog1.jpg` | Corgi on a forest path. Original source/licence could not be independently verified at publish time. |
+| `dog2.jpg` | German Shepherd. Original source/licence could not be independently verified at publish time. |
+
 ## License
 
-[MIT](LICENSE) © 2026 Hamoudi. CIFAR-10 is © its creators (Krizhevsky, 2009) and is downloaded at runtime, not redistributed. Pretrained ImageNet weights come from torchvision.
+[MIT](LICENSE) © 2026 Hamoudi. CIFAR-10 is © its creators (Krizhevsky, 2009) and is downloaded at runtime, not redistributed. Pretrained ImageNet weights come from torchvision. Demo photo licences are listed above; `dog.jpg` remains under CC BY-SA 3.0.
