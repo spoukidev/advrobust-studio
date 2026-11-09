@@ -1,0 +1,10 @@
+# CPU wheels: pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
+torch>=2.1
+torchvision>=0.16
+numpy
+matplotlib
+pillow
+pyyaml
+pyarrow
+streamlit>=1.30
+pytest>=7

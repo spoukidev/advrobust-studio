@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+data/
+results/*
+!results/sample/
+train.log
+*.egg-info/
+.streamlit/secrets.toml
+bench.log

@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "advrobust-studio"
+version = "0.1.0"
+description = "Interactive adversarial attack & defense workbench for image classifiers (FGSM, PGD, C&W, transfer, JPEG/bit-depth/smoothing, PGD adversarial training)."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+authors = [{ name = "Hamoudi" }]
+keywords = ["adversarial-examples", "robustness", "pytorch", "ai-security", "pgd", "fgsm"]
+dependencies = [
+  "torch>=2.1",
+  "torchvision>=0.16",
+  "numpy",
+  "matplotlib",
+  "pillow",
+  "pyyaml",
+  "pyarrow",
+]
+
+[project.optional-dependencies]
+ui = ["streamlit>=1.30"]
+dev = ["pytest>=7"]
+torchattacks = ["torchattacks"]
+
+[tool.setuptools.packages.find]
+include = ["studio*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
