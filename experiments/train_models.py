@@ -24,6 +24,14 @@ from studio.data import load_cifar10  # noqa: E402
 from studio.defenses.adv_train import save_checkpoint, train  # noqa: E402
 
 
+def frac(v) -> float:
+    """Parse '8/255'-style strings from YAML without eval()."""
+    if isinstance(v, str) and "/" in v:
+        a, b = v.split("/")
+        return float(a) / float(b)
+    return float(v)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--config", default="config/default.yaml")
@@ -43,7 +51,7 @@ def main():
         t0 = time.time()
         model, hist = train(x, y, arch=spec["arch"], mode=spec["mode"], epochs=spec["epochs"],
                             batch_size=cfg["training"]["batch_size"], lr=cfg["training"]["lr"],
-                            eps=eval(str(cfg["training"]["eps"])), train_steps=cfg["training"]["pgd_steps"],
+                            eps=frac(cfg["training"]["eps"]), train_steps=cfg["training"]["pgd_steps"],
                             seed=cfg["seed"], log=lambda *a: print(*a, flush=True))
         meta = {"mode": spec["mode"], "epochs": spec["epochs"], "history": hist,
                 "train_seconds": round(time.time() - t0, 1)}
