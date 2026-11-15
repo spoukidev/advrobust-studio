@@ -10,4 +10,5 @@ and benchmark work out of the box; each is < 1.5 MB).
 | `cifar_resnet_vanilla.pt` | CifarResNet (ResNet-8 style, ~78K params) | standard, 10 epochs |
 
 Format: `{"arch", "state_dict", "meta": {mode, epochs, history, train_seconds}}`.
-Load with `studio.models.load_cifar_checkpoint(path)`. Models expect inputs in [0, 1].
+Load with `studio.models.load_cifar_checkpoint(path)`, which uses `torch.load(weights_only=True)`
+(no arbitrary code execution). Models expect inputs in [0, 1].

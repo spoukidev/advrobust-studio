@@ -56,7 +56,7 @@ def load_cifar10(root: str | os.PathLike = "data", train: bool = False, limit: i
     split = "train" if train else "test"
     cache = root / f"cifar10_{split}.pt"
     if cache.exists():
-        x, y = torch.load(cache)
+        x, y = torch.load(cache, weights_only=True)
     else:
         try:
             if (root / "cifar10_hf" / f"{split}.parquet").exists():

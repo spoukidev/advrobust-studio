@@ -105,6 +105,21 @@ r = evaluate_attack(jpeg_model, x, y, "pgd_linf", 8/255, eval_model=jpeg_model, 
 
 Models take **un-normalized images in [0, 1]**; normalization is the model's first layer, so ε is measured in real pixel space — exactly what an attacker controls.
 
+### Safe checkpoint loading
+
+`.pt` files are pickles, and unpickling an untrusted one can run arbitrary code. `load_cifar_checkpoint` / `load_model` therefore always use `torch.load(..., weights_only=True)`, which only accepts tensors, dicts and plain values. Checkpoints written by `save_checkpoint` (`{"arch", "state_dict", "meta"}`, including the committed ones) and raw `state_dict` files load normally.
+
+Legacy files saved with `torch.save(model)` (a whole pickled `nn.Module`) are refused by default. If you created the file yourself, opt in explicitly and then re-save it in the safe format:
+
+```python
+from studio.defenses.adv_train import save_checkpoint
+
+model = load_cifar_checkpoint("old_model.pt", trust_checkpoint=True)  # or: ADVROBUST_TRUST_CHECKPOINTS=1
+save_checkpoint(model, "model.pt", arch="cifar_cnn")  # loads safely from now on
+```
+
+Never enable `trust_checkpoint` / `ADVROBUST_TRUST_CHECKPOINTS` for files downloaded from the internet or received from others.
+
 ## Streamlit UI
 
 ```bash

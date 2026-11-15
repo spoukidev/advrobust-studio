@@ -9,11 +9,20 @@ attacker can change.
 * ``cifar_resnet``  - small ResNet-ish network (different architecture, used as
                       the transfer-attack *victim*).
 * ``resnet18`` / ``efficientnet_b0`` - torchvision ImageNet-pretrained models.
-* any ``.pt`` file  - a full pickled ``nn.Module`` or a state_dict for one of
-                      the CIFAR architectures above.
+* any ``.pt`` file  - a checkpoint (``{"arch", "state_dict", "meta"}``) or a raw
+                      state_dict for one of the CIFAR architectures above.
+
+Checkpoints are loaded with ``torch.load(weights_only=True)``, which refuses to
+unpickle arbitrary Python objects, so a malicious ``.pt`` file cannot run code.
+Legacy full-module pickles (``torch.save(model)``) need an explicit opt-in:
+``trust_checkpoint=True`` or ``ADVROBUST_TRUST_CHECKPOINTS=1``. Only use it for
+files you created yourself or fully trust.
 """
 from __future__ import annotations
 
+import os
+import pickle
+import warnings
 from pathlib import Path
 
 import torch
@@ -24,6 +33,8 @@ CIFAR_MEAN = (0.4914, 0.4822, 0.4465)
 CIFAR_STD = (0.2470, 0.2435, 0.2616)
 IMAGENET_MEAN = (0.485, 0.456, 0.406)
 IMAGENET_STD = (0.229, 0.224, 0.225)
+
+TRUST_ENV_VAR = "ADVROBUST_TRUST_CHECKPOINTS"
 
 
 class Normalize(nn.Module):
@@ -98,9 +109,41 @@ def build_cifar_model(arch: str = "cifar_cnn") -> nn.Module:
     return nn.Sequential(Normalize(CIFAR_MEAN, CIFAR_STD), CIFAR_ARCHS[arch]())
 
 
-def load_cifar_checkpoint(path: str | Path, arch: str | None = None, map_location="cpu") -> nn.Module:
-    """Load a checkpoint saved by ``studio.defenses.adv_train.save_checkpoint``."""
-    obj = torch.load(path, map_location=map_location, weights_only=False)
+def _trust_from_env() -> bool:
+    return os.environ.get(TRUST_ENV_VAR, "").strip().lower() in ("1", "true", "yes", "on")
+
+
+def load_checkpoint_file(path: str | Path, map_location="cpu", trust_checkpoint: bool | None = None):
+    """``torch.load`` a checkpoint safely.
+
+    Always tries ``weights_only=True`` first (tensors, dicts, lists and plain
+    Python values only -- no arbitrary code execution). If the file needs full
+    unpickling (e.g. a legacy ``torch.save(model)`` file), it is only loaded
+    with ``weights_only=False`` when the caller opts in via
+    ``trust_checkpoint=True`` or the ``ADVROBUST_TRUST_CHECKPOINTS=1`` env var.
+    """
+    try:
+        return torch.load(path, map_location=map_location, weights_only=True)
+    except pickle.UnpicklingError as e:
+        trusted = _trust_from_env() if trust_checkpoint is None else trust_checkpoint
+        if not trusted:
+            raise pickle.UnpicklingError(
+                f"Refusing to load {path}: it contains pickled Python objects beyond tensors/state_dicts, "
+                f"and unpickling untrusted files can execute arbitrary code. If you created this file "
+                f"yourself (e.g. a legacy torch.save(model) checkpoint), pass trust_checkpoint=True or set "
+                f"{TRUST_ENV_VAR}=1, then re-save it with save_checkpoint() so it loads safely next time. "
+                f"Original error: {e}"
+            ) from e
+        warnings.warn(
+            f"Loading {path} with weights_only=False because it was explicitly trusted. "
+            "This executes pickled code; only do this for files you fully trust.",
+            stacklevel=2,
+        )
+        return torch.load(path, map_location=map_location, weights_only=False)
+
+
+def model_from_checkpoint(obj, arch: str | None = None, source: str | Path = "<checkpoint>") -> nn.Module:
+    """Build an eval-mode model from an already-loaded checkpoint object."""
     if isinstance(obj, nn.Module):
         return obj.eval()
     if isinstance(obj, dict) and "state_dict" in obj:
@@ -112,7 +155,18 @@ def load_cifar_checkpoint(path: str | Path, arch: str | None = None, map_locatio
         model = build_cifar_model(arch or "cifar_cnn")
         model.load_state_dict(obj)
         return model.eval()
-    raise ValueError(f"Unrecognised checkpoint format: {path}")
+    raise ValueError(f"Unrecognised checkpoint format: {source}")
+
+
+def load_cifar_checkpoint(path: str | Path, arch: str | None = None, map_location="cpu",
+                          trust_checkpoint: bool | None = None) -> nn.Module:
+    """Load a checkpoint saved by ``studio.defenses.adv_train.save_checkpoint``.
+
+    Safe by default (``weights_only=True``); see ``load_checkpoint_file`` for
+    the opt-in needed for legacy full-module pickles.
+    """
+    obj = load_checkpoint_file(path, map_location=map_location, trust_checkpoint=trust_checkpoint)
+    return model_from_checkpoint(obj, arch, source=path)
 
 
 def load_torchvision(name: str = "resnet18", pretrained: bool = True) -> nn.Module:

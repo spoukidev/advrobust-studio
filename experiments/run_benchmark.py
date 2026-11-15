@@ -23,11 +23,17 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from studio import visualize as viz  # noqa: E402
-from studio.attacks import ATTACKS, pgd_linf, transfer_attack  # noqa: E402
+from studio.attacks import pgd_linf, transfer_attack  # noqa: E402
 from studio.data import CIFAR10_CLASSES, load_cifar10, to_float  # noqa: E402
 from studio.defenses import wrap_with_defense  # noqa: E402
 from studio.eval import evaluate_attack, eps_curve, predict  # noqa: E402
-from studio.models import count_params, imagenet_labels, load_cifar_checkpoint, load_torchvision  # noqa: E402
+from studio.models import (  # noqa: E402
+    count_params,
+    imagenet_labels,
+    load_checkpoint_file,
+    load_torchvision,
+    model_from_checkpoint,
+)
 from studio.report import write_report  # noqa: E402
 
 
@@ -105,8 +111,8 @@ def main():
         p = ckdir / f"{name}.pt"
         if not p.exists():
             sys.exit(f"missing checkpoint {p}; run `make train` first")
-        ck = torch.load(p, map_location="cpu", weights_only=False)
-        models[name] = load_cifar_checkpoint(p)
+        ck = load_checkpoint_file(p)  # weights_only=True; see studio.models
+        models[name] = model_from_checkpoint(ck, source=p)
         meta = ck.get("meta", {})
         info[name] = {"arch": ck["arch"], "mode": meta.get("mode"), "epochs": meta.get("epochs"),
                       "params": count_params(models[name]), "train_seconds": meta.get("train_seconds")}
