@@ -1,5 +1,7 @@
 # 🛡️ AdvRobust Studio
 
+[![CI](https://github.com/spoukidev/advrobust-studio/actions/workflows/ci.yml/badge.svg)](https://github.com/spoukidev/advrobust-studio/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 **An adversarial attack & defense workbench for image classifiers — hand-written FGSM / PGD / C&W in PyTorch, three defenses, PGD adversarial training, black-box transfer, a Streamlit UI, and a one-command robustness benchmark.**
 
 ![PGD-L∞ ε=8/255 vs vanilla CIFAR-10 CNN](results/sample/figures/hero_grid.png)
